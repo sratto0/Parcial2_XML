@@ -8,5 +8,5 @@
 |----------|----------|
 | Julia Priolo   | 63743   |
 | Martina Nudel    | 64155   |
-| Sebastian Vega Garrot    |  12345  |
+| Sebastian Vega Garrot    |    |
 | Sofia Ratto    | 63621   |
