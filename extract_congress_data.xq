@@ -6,6 +6,19 @@ let $members := doc("congress_members_info.xml")/api-root/members/member
 let $sessions := $congress/sessions
 let $items := $sessions/item
 
+(: Filtrar miembros para cada cámara :)
+let $houseMembers := 
+  for $member in $members
+  let $chambers := $member/terms/item/item/chamber
+  where some $chamber in $chambers satisfies normalize-space($chamber) = "House of Representatives"
+  return $member
+
+let $senateMembers := 
+  for $member in $members
+  let $chambers := $member/terms/item/item/chamber
+  where some $chamber in $chambers satisfies normalize-space($chamber) = "Senate"
+  return $member
+
 (: Generar la salida XML :)
 return
   (
@@ -22,19 +35,15 @@ return
             <name>House of Representatives</name>
             <members>
               {
-                for $member in $members
-                let $chambers := $member/terms/item/item/chamber
+                for $member in $houseMembers
                 return
-                  for $chamber in $chambers
-                  where normalize-space($chamber) = "House of Representatives"
-                  return
-                    <member bioguideId="{ $member/bioguideId }">
-                      <name>{ $member/name }</name>
-                      <state>{ $member/state }</state>
-                      <party>{ $member/partyName }</party>
-                      <image_url>{ $member/depiction/imageUrl }</image_url>
-                      <period from="{ $member/terms/item/item/startYear }" to="{ $member/terms/item/item/endYear }" />
-                    </member>
+                  <member bioguideId="{ $member/bioguideId }">
+                    <name>{ $member/name }</name>
+                    <state>{ $member/state }</state>
+                    <party>{ $member/partyName }</party>
+                    <image_url>{ $member/depiction/imageUrl }</image_url>
+                    <period from="{ $member/terms/item/item/startYear }" to="{ $member/terms/item/item/endYear }" />
+                  </member>
               }
             </members>
             <sessions>
@@ -56,19 +65,15 @@ return
             <name>Senate</name>
             <members>
               {
-                for $member in $members
-                let $chambers := $member/terms/item/item/chamber
+                for $member in $senateMembers
                 return
-                  for $chamber in $chambers
-                  where normalize-space($chamber) = "Senate"
-                  return
-                    <member bioguideId="{ $member/bioguideId }">
-                      <name>{ $member/name }</name>
-                      <state>{ $member/state }</state>
-                      <party>{ $member/partyName }</party>
-                      <image_url>{ $member/depiction/imageUrl }</image_url>
-                      <period from="{ $member/terms/item/item/startYear }" to="{ $member/terms/item/item/endYear }" />
-                    </member>
+                  <member bioguideId="{ $member/bioguideId }">
+                    <name>{ $member/name }</name>
+                    <state>{ $member/state }</state>
+                    <party>{ $member/partyName }</party>
+                    <image_url>{ $member/depiction/imageUrl }</image_url>
+                    <period from="{ $member/terms/item/item/startYear }" to="{ $member/terms/item/item/endYear }" />
+                  </member>
               }
             </members>
             <sessions>
