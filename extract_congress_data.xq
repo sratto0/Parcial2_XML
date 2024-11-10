@@ -1,82 +1,91 @@
-xquery version "3.1";
+declare namespace ns = "http://www.w3.org/2001/XMLSchema";
 
-declare namespace saxon="http://saxon.sf.net/";
-declare option saxon:output "indent=yes";
+(: Extraer la información del <congress>, <sessions>, y <item> :)
+let $congress := doc("congress_info.xml")/api-root/congress
+let $members := doc("congress_members_info.xml")/api-root/members/member
+let $sessions := $congress/sessions
+let $items := $sessions/item
 
-(: Definición de mensajes de error :)
-let $ErrorName := <error>Congress name must not be empty</error>
-let $ErrorPeriod := <error>Congress period is incomplete</error>
-let $ErrorURL := <error>Congress URL is missing</error>
-
-(: Importar los documentos XML :)
-let $congressInfo := doc("/Users/martundl/docsXML/2do_parcial/congress_info.xml")
-let $congressMembers := doc("/Users/martundl/docsXML/2do_parcial/congress_members_info.xml")
-
-(: Obtener los datos principales del Congreso :)
-let $congressName := string($congressInfo/api-root/congress/name)
-let $congressNumber := string($congressInfo/api-root/congress/number)
-let $startYear := string($congressInfo/api-root/congress/startYear)
-let $endYear := string($congressInfo/api-root/congress/endYear)
-let $url := string($congressInfo/api-root/congress/url)
-
-(: Validar datos obligatorios y recolectar errores :)
-let $errors := ()
-let $errors := if ($congressName = "") then ($errors, $ErrorName) else $errors
-let $errors := if ($startYear = "" or $endYear = "") then ($errors, $ErrorPeriod) else $errors
-let $errors := if ($url = "") then ($errors, $ErrorURL) else $errors
-
-(: Si hay errores, devolver un XML solo con errores :)
+(: Generar la salida XML :)
 return
-  if (count($errors) > 0) then
-    <data xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:noNamespaceSchemaLocation="congress_data.xsd">
-      {$errors}
-    </data>
-  else
-    (: Si no hay errores, construir el XML con la información del congreso y sus cámaras :)
-    let $chambers := 
-      for $chamberName in distinct-values($congressInfo/sessions/item/chamber)
-      let $chamberMembers := 
-        for $member in $congressMembers
-        where some $term in $member/terms/item/item/chamber satisfies ($term = $chamberName)
-        return
-          <member bioguideId="{string($member/bioguideId)}">
-            <name>{string($member/name)}</name>
-            <state>{string($member/state)}</state>
-            <party>{string($member/partyName)}</party>
-            <image_url>{string($member/depiction/imageUrl)}</image_url>
-            <period from="{string($member/terms/item/item/startYear)}" 
-                    to="{string($member/terms/item/item/endYear)}" />
-          </member>
-      let $chamberSessions := 
-        for $session in $congressInfo/sessions/item
-        where string($session/chamber) = $chamberName
-        return
-          <session>
-            <number>{string($session/number)}</number>
-            <period from="{string($session/startDate)}" 
-                    to="{string($session/endDate)}" />
-            <type>{string($session/type)}</type>
-          </session>
-      return
-        <chamber>
-          <name>{$chamberName}</name>
-          <members>{$chamberMembers}</members>
-          <sessions>{$chamberSessions}</sessions>
-        </chamber>
-      
-    (: Generar la salida final que cumple con el XSD :)
-    return
-    <data xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:noNamespaceSchemaLocation="congress_data.xsd">
+  (
+    <?xml-stylesheet type="text/xsl" href="generate_html.xsl"?>,
+
+    <data>
       <congress>
-        <name number="{$congressNumber}">{$congressName}</name>
-        <period from="{$startYear}" to="{$endYear}">{$startYear} - {$endYear}</period>
-        <url>{$url}</url>
+        <name>{ $congress/name }</name>
+        <period from="{ $congress/startYear }" to="{ $congress/endYear }" />
+        
         <chambers>
-          {$chambers}
+          (: Tabla para House of Representatives :)
+          <chamber>
+            <name>House of Representatives</name>
+            <members>
+              {
+                for $member in $members
+                let $chambers := $member/terms/item/item/chamber
+                return
+                  for $chamber in $chambers
+                  where normalize-space($chamber) = "House of Representatives"
+                  return
+                    <member bioguideId="{ $member/bioguideId }">
+                      <name>{ $member/name }</name>
+                      <state>{ $member/state }</state>
+                      <party>{ $member/partyName }</party>
+                      <image_url>{ $member/depiction/imageUrl }</image_url>
+                      <period from="{ $member/terms/item/item/startYear }" to="{ $member/terms/item/item/endYear }" />
+                    </member>
+              }
+            </members>
+            <sessions>
+              {
+                for $item in $items
+                where normalize-space($item/chamber) = "House of Representatives"
+                return
+                  <session>
+                    <number>{ $item/number }</number>
+                    <type>{ $item/type }</type>
+                    <period from="{ $item/startDate }" to="{ $item/endDate }" />
+                  </session>
+              }
+            </sessions>
+          </chamber>
+          
+          (: Tabla para Senate :)
+          <chamber>
+            <name>Senate</name>
+            <members>
+              {
+                for $member in $members
+                let $chambers := $member/terms/item/item/chamber
+                return
+                  for $chamber in $chambers
+                  where normalize-space($chamber) = "Senate"
+                  return
+                    <member bioguideId="{ $member/bioguideId }">
+                      <name>{ $member/name }</name>
+                      <state>{ $member/state }</state>
+                      <party>{ $member/partyName }</party>
+                      <image_url>{ $member/depiction/imageUrl }</image_url>
+                      <period from="{ $member/terms/item/item/startYear }" to="{ $member/terms/item/item/endYear }" />
+                    </member>
+              }
+            </members>
+            <sessions>
+              {
+                for $item in $items
+                where normalize-space($item/chamber) = "Senate"
+                return
+                  <session>
+                    <number>{ $item/number }</number>
+                    <type>{ $item/type }</type>
+                    <period from="{ $item/startDate }" to="{ $item/endDate }" />
+                  </session>
+              }
+            </sessions>
+          </chamber>
+          
         </chambers>
       </congress>
     </data>
-
-
+  )
