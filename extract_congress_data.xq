@@ -15,8 +15,8 @@ let $congressMembers := doc("/Users/martundl/docsXML/2do_parcial/congress_member
 (: Obtener los datos principales del Congreso :)
 let $congressName := string($congressInfo/api-root/congress/name)
 let $congressNumber := string($congressInfo/api-root/congress/number)
-let $startYear := string($congressInfo/api-root/congress/startDate)
-let $endYear := string($congressInfo/api-root/congress/endDate)
+let $startYear := string($congressInfo/api-root/congress/startYear)
+let $endYear := string($congressInfo/api-root/congress/endYear)
 let $url := string($congressInfo/api-root/congress/url)
 
 (: Validar datos obligatorios y recolectar errores :)
