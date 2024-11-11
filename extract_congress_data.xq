@@ -48,7 +48,10 @@ return
                       let $houseTerm := normalize-space($term/startYear)
                       where normalize-space($term/chamber) = "House of Representatives"
                       return
-                        <period from="{ $houseTerm }" to="{ normalize-space($term/endYear) }" />
+                        if ($term/endYear) then
+                          <period from="{ $houseTerm }" to="{ normalize-space($term/endYear) }" />
+                        else
+                          <period from="{ $houseTerm }" />
                     }
                   </member>
               }
@@ -85,7 +88,10 @@ return
                       let $senateTerm := normalize-space($term/startYear)
                       where normalize-space($term/chamber) = "Senate"
                       return
-                        <period from="{ $senateTerm }" to="{ normalize-space($term/endYear) }" />
+                        if ($term/endYear) then
+                          <period from="{ $senateTerm }" to="{ normalize-space($term/endYear) }" />
+                        else
+                          <period from="{ $senateTerm }" />
                     }
                   </member>
               }

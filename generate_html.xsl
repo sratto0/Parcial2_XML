@@ -11,7 +11,10 @@
                     <xsl:value-of select="data/congress/name"/>
                 </h1>
                 <h3 align="center">
-                    From <xsl:value-of select="data/congress/period/@from"/> to <xsl:value-of select="data/congress/period/@to"/>
+                    From <xsl:value-of select="data/congress/period/@from"/> 
+                    <xsl:if test="data/congress/period/@to">
+                        to <xsl:value-of select="data/congress/period/@to"/>
+                    </xsl:if>
                 </h3>
                 <hr/> <!-- LINEA HORIZONTAL-->
 
@@ -40,7 +43,10 @@
                                     <td><xsl:value-of select="state"/></td>
                                     <td><xsl:value-of select="party"/></td>
                                     <td>
-                                        From <xsl:value-of select="period/@from"/> to <xsl:value-of select="period/@to"/>
+                                        From <xsl:value-of select="period/@from"/>
+                                        <xsl:if test="period/@to">
+                                            to <xsl:value-of select="period/@to"/>
+                                        </xsl:if>
                                     </td>
                                 </tr>
                             </xsl:for-each>
@@ -64,7 +70,10 @@
                                     <td><xsl:value-of select="number"/></td>
                                     <td><xsl:value-of select="type"/></td>
                                     <td>
-                                        From <xsl:value-of select="period/@from"/> to <xsl:value-of select="period/@to"/>
+                                        From <xsl:value-of select="period/@from"/>
+                                        <xsl:if test="period/@to">
+                                            to <xsl:value-of select="period/@to"/>
+                                        </xsl:if>
                                     </td>
                                 </tr>
                             </xsl:for-each>
