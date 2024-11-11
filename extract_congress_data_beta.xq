@@ -66,6 +66,7 @@ return
                       <name>{$name}</name>
                       <state>{$state}</state>
                       <party>{$party}</party>
+                      <image_url>{$imageUrl}</image_url>
                       {$periods}
                     </member>
                   else ()
