@@ -27,7 +27,7 @@ return
     <data>
       <congress>
         <name>{ $congress/name }</name>
-        <period from="{ $congress/startYear }" to="{ $congress/endYear }" />
+        <period from="{ normalize-space($congress/startYear) }" to="{ normalize-space($congress/endYear) }" />
         
         <chambers>
           (: Tabla para House of Representatives :)
@@ -36,13 +36,20 @@ return
             <members>
               {
                 for $member in $houseMembers
+                let $terms := $member/terms/item/item
                 return
-                  <member bioguideId="{ $member/bioguideId }">
-                    <name>{ $member/name }</name>
-                    <state>{ $member/state }</state>
-                    <party>{ $member/partyName }</party>
-                    <image_url>{ $member/depiction/imageUrl }</image_url>
-                    <period from="{ $member/terms/item/item/startYear }" to="{ $member/terms/item/item/endYear }" />
+                  <member bioguideId="{ normalize-space($member/bioguideId) }">
+                    <name>{ normalize-space($member/name) }</name>
+                    <state>{ normalize-space($member/state) }</state>
+                    <party>{ normalize-space($member/partyName) }</party>
+                    <image_url>{ normalize-space($member/depiction/imageUrl) }</image_url>
+                    {
+                      for $term in $terms
+                      let $houseTerm := normalize-space($term/startYear)
+                      where normalize-space($term/chamber) = "House of Representatives"
+                      return
+                        <period from="{ $houseTerm }" to="{ normalize-space($term/endYear) }" />
+                    }
                   </member>
               }
             </members>
@@ -52,9 +59,9 @@ return
                 where normalize-space($item/chamber) = "House of Representatives"
                 return
                   <session>
-                    <number>{ $item/number }</number>
-                    <type>{ $item/type }</type>
-                    <period from="{ $item/startDate }" to="{ $item/endDate }" />
+                    <number>{ normalize-space($item/number) }</number>
+                    <type>{ normalize-space($item/type) }</type>
+                    <period from="{ normalize-space($item/startDate) }" to="{ normalize-space($item/endDate) }" />
                   </session>
               }
             </sessions>
@@ -66,13 +73,20 @@ return
             <members>
               {
                 for $member in $senateMembers
+                let $terms := $member/terms/item/item
                 return
-                  <member bioguideId="{ $member/bioguideId }">
-                    <name>{ $member/name }</name>
-                    <state>{ $member/state }</state>
-                    <party>{ $member/partyName }</party>
-                    <image_url>{ $member/depiction/imageUrl }</image_url>
-                    <period from="{ $member/terms/item/item/startYear }" to="{ $member/terms/item/item/endYear }" />
+                  <member bioguideId="{ normalize-space($member/bioguideId) }">
+                    <name>{ normalize-space($member/name) }</name>
+                    <state>{ normalize-space($member/state) }</state>
+                    <party>{ normalize-space($member/partyName) }</party>
+                    <image_url>{ normalize-space($member/depiction/imageUrl) }</image_url>
+                    {
+                      for $term in $terms
+                      let $senateTerm := normalize-space($term/startYear)
+                      where normalize-space($term/chamber) = "Senate"
+                      return
+                        <period from="{ $senateTerm }" to="{ normalize-space($term/endYear) }" />
+                    }
                   </member>
               }
             </members>
@@ -82,9 +96,9 @@ return
                 where normalize-space($item/chamber) = "Senate"
                 return
                   <session>
-                    <number>{ $item/number }</number>
-                    <type>{ $item/type }</type>
-                    <period from="{ $item/startDate }" to="{ $item/endDate }" />
+                    <number>{ normalize-space($item/number) }</number>
+                    <type>{ normalize-space($item/type) }</type>
+                    <period from="{ normalize-space($item/startDate) }" to="{ normalize-space($item/endDate) }" />
                   </session>
               }
             </sessions>
