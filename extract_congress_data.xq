@@ -1,5 +1,5 @@
 declare namespace ns = "http://www.w3.org/2001/XMLSchema";
-
+(::)
 (: Extraer la información del <congress>, <sessions>, y <item> :)
 let $congress := doc("congress_info.xml")/api-root/congress
 let $members := doc("congress_members_info.xml")/api-root/members/member
@@ -114,3 +114,4 @@ return
       </congress>
     </data>
   )
+  
