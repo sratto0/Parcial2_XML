@@ -41,36 +41,35 @@ return
         <chamber>
           <name>{normalize-space($chamber)}</name>
           <members>
-              {
-                (: Obtener todos los miembros que han pertenecido a esta cámara :)
-                for $member in $congressMembers//member
-                  let $bioguideId := string($member/bioguideId)
-                  let $name := normalize-space($member/name)
-                  let $state := normalize-space($member/state)
-                  let $party := normalize-space($member/partyName)
-                  let $imageUrl := normalize-space($member/depiction/imageUrl)
-                  let $periods := 
-                    for $term in $member/terms/item/item
-                      where normalize-space(string($term/chamber)) = normalize-space($chamber)
-                      let $startYear := normalize-space($term/startYear)
-                      let $endYear := normalize-space($term/endYear)
-                      return
-                          (: Si no hay endYear, solo mostrar el startYear, sin 'to' :)
-                          if ($endYear = "") then
-                            <period from="{$startYear}">{$startYear}</period>
-                          else
-                            <period from="{$startYear}" to="{$endYear}">{$startYear} - {$endYear}</period>
-                  return
-                  if (some $term in $member/terms/item/item satisfies normalize-space(string($term/chamber)) = normalize-space($chamber)) then
-                    <member>
-                      <name>{$name}</name>
-                      <state>{$state}</state>
-                      <party>{$party}</party>
-                      <image_url>{$imageUrl}</image_url>
-                      {$periods}
-                    </member>
-                  else ()
-              }
+          {
+            (: Obtener todos los miembros que han pertenecido a esta cámara :)
+            for $member in $congressMembers//member
+              let $bioguideId := string($member/bioguideId)
+              let $name := normalize-space($member/name)
+              let $state := normalize-space($member/state)
+              let $party := normalize-space($member/partyName)
+              let $imageUrl := normalize-space($member/depiction/imageUrl)
+
+              (: Crear una fila de miembro por cada período en que estuvo en la cámara :)
+              for $term in $member/terms/item/item
+                where normalize-space(string($term/chamber)) = normalize-space($chamber)
+                let $startYear := normalize-space($term/startYear)
+                let $endYear := normalize-space($term/endYear)
+                let $period := 
+                  if ($endYear = "") then
+                    <period from="{$startYear}">{$startYear}</period>
+                  else
+                    <period from="{$startYear}" to="{$endYear}">{$startYear} - {$endYear}</period>
+                  
+              return
+                <member>
+                  <name>{$name}</name>
+                  <state>{$state}</state>
+                  <party>{$party}</party>
+                  <image_url>{$imageUrl}</image_url>
+                  {$period}
+                </member>
+          }
           </members>
           <sessions>
             {
