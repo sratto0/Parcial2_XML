@@ -1,116 +1,100 @@
-declare namespace ns = "http://www.w3.org/2001/XMLSchema";
+xquery version "3.1";
 
-(: Extraer la información del <congress>, <sessions>, y <item> :)
-let $congress := doc("congress_info.xml")/api-root/congress
-let $members := doc("congress_members_info.xml")/api-root/members/member
-let $sessions := $congress/sessions
-let $items := $sessions/item
+declare namespace saxon="http://saxon.sf.net/";
+declare option saxon:output "indent=yes";
 
-(: Filtrar miembros para cada cámara :)
-let $houseMembers := 
-  for $member in $members
-  let $chambers := $member/terms/item/item/chamber
-  where some $chamber in $chambers satisfies normalize-space($chamber) = "House of Representatives"
-  return $member
+(: Definición de mensajes de error :)
+let $ErrorName := <error>Congress name must not be empty</error>
+let $ErrorPeriod := <error>Congress period is incomplete</error>
+let $ErrorURL := <error>Congress URL is missing</error>
 
-let $senateMembers := 
-  for $member in $members
-  let $chambers := $member/terms/item/item/chamber
-  where some $chamber in $chambers satisfies normalize-space($chamber) = "Senate"
-  return $member
+(: Importar los documentos XML :)
+let $congressInfo := doc("congress_info.xml")
+let $congressMembers := doc("congress_members_info.xml")
 
-(: Generar la salida XML :)
+(: Obtener los datos principales del Congreso :)
+let $congressName := string($congressInfo/api-root/congress/name)
+let $congressNumber := string($congressInfo/api-root/congress/number)
+let $startYear := string($congressInfo/api-root/congress/startYear)
+let $endYear := string($congressInfo/api-root/congress/endYear)
+let $url := string($congressInfo/api-root/congress/url)
+
+(: Validar datos obligatorios y recolectar errores :)
+let $errors := ()
+let $errors := if ($congressName = "") then ($errors, $ErrorName) else $errors
+let $errors := if ($startYear = "" or $endYear = "") then ($errors, $ErrorPeriod) else $errors
+let $errors := if ($url = "") then ($errors, $ErrorURL) else $errors
+
+(: Si hay errores, devolver un XML solo con errores :)
 return
-  (
-    <?xml-stylesheet type="text/xsl" href="generate_html.xsl"?>,
+  if (count($errors) > 0) then
+    <data xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="congress_data.xsd">
+      {$errors}
+    </data>
+  else
+    (: Si no hay errores, construir el XML con la información del congreso y sus cámaras :)
+    let $chambers := 
+      for $chamber in distinct-values(doc("congress_info.xml")//item/chamber)
+      return
+      (
+        <chamber>
+          <name>{normalize-space($chamber)}</name>
+          <members>
+              {
+                (: Obtener todos los miembros que han pertenecido a esta cámara :)
+                for $member in $congressMembers//member
+                  let $bioguideId := string($member/bioguideId)
+                  let $name := normalize-space($member/name)
+                  let $state := normalize-space($member/state)
+                  let $party := normalize-space($member/partyName)
+                  let $imageUrl := normalize-space($member/depiction/imageUrl)
+                  let $periods := 
+                    for $term in $member/terms/item/item
+                      where normalize-space(string($term/chamber)) = normalize-space($chamber)
+                      let $startYear := normalize-space($term/startYear)
+                      let $endYear := normalize-space($term/endYear)
+                      return
+                          (: Si no hay endYear, solo mostrar el startYear, sin 'to' :)
+                          if ($endYear = "") then
+                            <period from="{$startYear}">{$startYear}</period>
+                          else
+                            <period from="{$startYear}" to="{$endYear}">{$startYear} - {$endYear}</period>
+                  return
+                  if (some $term in $member/terms/item/item satisfies normalize-space(string($term/chamber)) = normalize-space($chamber)) then
+                    <member>
+                      <name>{$name}</name>
+                      <state>{$state}</state>
+                      <party>{$party}</party>
+                      {$periods}
+                    </member>
+                  else ()
+              }
+          </members>
+          <sessions>
+            {
+              for $session in doc("congress_info.xml")//item[chamber = $chamber]
+              return
+              <session>
+                  <number>{normalize-space($session/number)}</number>
+                  <period from="{normalize-space($session/startDate)}" to="{normalize-space($session/endDate)}">{normalize-space($session/startDate)} - {normalize-space($session/endDate)}</period>
+                  <type>{normalize-space($session/type)}</type>
+              </session>
+            }
+          </sessions>
+        </chamber>
+      )
 
-    <data>
+    (: Generar la salida final que cumple con el XSD :)
+    return
+    <data xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="congress_data.xsd">
       <congress>
-        <name>{ $congress/name }</name>
-        <period from="{ normalize-space($congress/startYear) }" to="{ normalize-space($congress/endYear) }" />
-        
+        <name number="{xs:integer($congressNumber)}">{$congressName}</name>
+        <period from="{normalize-space($startYear)}" to="{normalize-space($endYear)}">{normalize-space(concat($startYear, "-", $endYear))}</period>
+        <url>{normalize-space($url)}</url>
         <chambers>
-          (: Tabla para House of Representatives :)
-          <chamber>
-            <name>House of Representatives</name>
-            <members>
-              {
-                for $member in $houseMembers
-                let $terms := $member/terms/item/item
-                return
-                  <member bioguideId="{ normalize-space($member/bioguideId) }">
-                    <name>{ normalize-space($member/name) }</name>
-                    <state>{ normalize-space($member/state) }</state>
-                    <party>{ normalize-space($member/partyName) }</party>
-                    <image_url>{ normalize-space($member/depiction/imageUrl) }</image_url>
-                    {
-                      for $term in $terms
-                      let $houseTerm := normalize-space($term/startYear)
-                      where normalize-space($term/chamber) = "House of Representatives"
-                      return
-                        if ($term/endYear) then
-                          <period from="{ $houseTerm }" to="{ normalize-space($term/endYear) }" />
-                        else
-                          <period from="{ $houseTerm }" />
-                    }
-                  </member>
-              }
-            </members>
-            <sessions>
-              {
-                for $item in $items
-                where normalize-space($item/chamber) = "House of Representatives"
-                return
-                  <session>
-                    <number>{ normalize-space($item/number) }</number>
-                    <type>{ normalize-space($item/type) }</type>
-                    <period from="{ normalize-space($item/startDate) }" to="{ normalize-space($item/endDate) }" />
-                  </session>
-              }
-            </sessions>
-          </chamber>
-          
-          (: Tabla para Senate :)
-          <chamber>
-            <name>Senate</name>
-            <members>
-              {
-                for $member in $senateMembers
-                let $terms := $member/terms/item/item
-                return
-                  <member bioguideId="{ normalize-space($member/bioguideId) }">
-                    <name>{ normalize-space($member/name) }</name>
-                    <state>{ normalize-space($member/state) }</state>
-                    <party>{ normalize-space($member/partyName) }</party>
-                    <image_url>{ normalize-space($member/depiction/imageUrl) }</image_url>
-                    {
-                      for $term in $terms
-                      let $senateTerm := normalize-space($term/startYear)
-                      where normalize-space($term/chamber) = "Senate"
-                      return
-                        if ($term/endYear) then
-                          <period from="{ $senateTerm }" to="{ normalize-space($term/endYear) }" />
-                        else
-                          <period from="{ $senateTerm }" />
-                    }
-                  </member>
-              }
-            </members>
-            <sessions>
-              {
-                for $item in $items
-                where normalize-space($item/chamber) = "Senate"
-                return
-                  <session>
-                    <number>{ normalize-space($item/number) }</number>
-                    <type>{ normalize-space($item/type) }</type>
-                    <period from="{ normalize-space($item/startDate) }" to="{ normalize-space($item/endDate) }" />
-                  </session>
-              }
-            </sessions>
-          </chamber>
-          
+          {$chambers}
         </chambers>
       </congress>
     </data>
-  )
