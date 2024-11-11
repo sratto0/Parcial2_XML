@@ -43,14 +43,11 @@
                                     <td><xsl:value-of select="state"/></td>
                                     <td><xsl:value-of select="party"/></td>
                                     <td>
-                                       
-                                        <xsl:for-each select="period">
-                                            <xsl:value-of select="concat('From ', @from)"/>
-                                            <xsl:if test="@to">
-                                                <xsl:value-of select="concat(' to ', @to)"/>
-                                            </xsl:if>
-                                            <xsl:if test="position() != last()">, </xsl:if> 
-                                        </xsl:for-each>
+                                      
+                                        From <xsl:value-of select="period/@from"/>
+                                        <xsl:if test="period/@to">
+                                            to <xsl:value-of select="period/@to"/>
+   					                    </xsl:if>
                                     </td>
                                 </tr>
                             </xsl:for-each>
