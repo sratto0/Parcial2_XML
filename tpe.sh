@@ -1,9 +1,16 @@
 #!/bin/bash
 
-# Función para manejar errores
+# Función para manejar errores y generar un HTML con el mensaje
 handle_error() {
     local error_message=$1
-    echo "<data><error>${error_message}</error></data>" > congress_data.xml
+    echo "<html>
+            <head>
+                <title>Error</title>
+            </head>
+            <body>
+                <h1 style='color: red; text-align: center;'>${error_message}</h1>
+            </body>
+          </html>" > congress_data.html
     echo "Error: $error_message"
     exit 1
 }
@@ -17,28 +24,32 @@ fetch_data() {
     
     if [ $? -ne 0 ]; then
         handle_error "Error: Failed to fetch data from the API."
+    elif ! grep -q '<?xml' "$output_file"; then
+        handle_error "Error: Received invalid or empty XML data."
     else
         echo "XML file generated successfully: $output_file"
     fi
 }
 
+# Validar número de congreso
 if [ $# -ne 1 ]; then
-    handle_error "Congress number must not be empty."
+    handle_error "Error: Congress number must not be empty."
 fi
 congress_number=$1
 
 if ! [[ "$congress_number" =~ ^[0-9]+$ ]] || [ "$congress_number" -lt 1 ] || [ "$congress_number" -gt 118 ]; then
-    handle_error "Congress number must be an integer between 1 and 118."
+    handle_error "Error: Congress number must be an integer between 1 and 118."
 fi
 
 if [ -z "$CONGRESS_API" ]; then
-    handle_error "The CONGRESS_API environment variable is not set."
+    handle_error "Error: The CONGRESS_API environment variable is not set."
 fi
 
+# Definir archivos de salida XML
 xml_congress_info_output="congress_info.xml"
 xml_congress_members_info_output="congress_members_info.xml"
 
-
+# Realizar solicitudes y verificar los archivos XML
 fetch_data "https://api.congress.gov/v3/congress/$congress_number?format=xml&api_key=${CONGRESS_API}" "$xml_congress_info_output"
 fetch_data "https://api.congress.gov/v3/member/congress/$congress_number?format=xml&currentMember=false&limit=500&api_key=${CONGRESS_API}" "$xml_congress_members_info_output"
 
