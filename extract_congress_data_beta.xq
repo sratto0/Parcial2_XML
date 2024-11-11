@@ -41,15 +41,15 @@ return
         <chamber name="{normalize-space($chamber)}">
           <members>
               {
-                  (: Obtener todos los miembros que han pertenecido a esta cámara :)
-                  for $member in $congressMembers//member
+                (: Obtener todos los miembros que han pertenecido a esta cámara :)
+                for $member in $congressMembers//member
                   let $bioguideId := string($member/bioguideId)
                   let $name := normalize-space($member/name)
                   let $state := normalize-space($member/state)
                   let $party := normalize-space($member/partyName)
                   let $imageUrl := normalize-space($member/depiction/imageUrl)
                   let $periods := 
-                      for $term in $member/terms/item/item
+                    for $term in $member/terms/item/item
                       where normalize-space(string($term/chamber)) = normalize-space($chamber)
                       let $startYear := normalize-space($term/startYear)
                       let $endYear := normalize-space($term/endYear)
