@@ -74,12 +74,20 @@ return
           <sessions>
             {
               for $session in doc("congress_info.xml")//item[chamber = $chamber]
+                let $sessionStart := normalize-space($session/startDate)
+                let $sessionEnd := normalize-space($session/endDate)
+                let $sessionPeriod := 
+                  if ($sessionEnd = "") then
+                    <period from="{$sessionStart}">{$sessionStart}</period>
+                  else
+                    <period from="{$sessionStart}" to="{$sessionEnd}">{$sessionStart} - {$sessionEnd}</period>
+                
               return
-              <session>
+                <session>
                   <number>{normalize-space($session/number)}</number>
-                  <period from="{normalize-space($session/startDate)}" to="{normalize-space($session/endDate)}">{normalize-space($session/startDate)} - {normalize-space($session/endDate)}</period>
+                  {$sessionPeriod}
                   <type>{normalize-space($session/type)}</type>
-              </session>
+                </session>
             }
           </sessions>
         </chamber>
