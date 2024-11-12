@@ -15,7 +15,7 @@ handle_error() {
     exit 1
 }
 
-# Función para realizar la solicitud y verificar el resultado
+# Funcion para realizar la solicitud y verificar el resultado
 fetch_data() {
     local url=$1
     local output_file=$2
@@ -31,7 +31,6 @@ fetch_data() {
     fi
 }
 
-# Validar número de congreso
 if [ $# -ne 1 ]; then
     handle_error "Error: Congress number must not be empty."
 fi
@@ -45,11 +44,10 @@ if [ -z "$CONGRESS_API" ]; then
     handle_error "Error: The CONGRESS_API environment variable is not set."
 fi
 
-# Definir archivos de salida XML
+
 xml_congress_info_output="congress_info.xml"
 xml_congress_members_info_output="congress_members_info.xml"
 
-# Realizar solicitudes y verificar los archivos XML
 fetch_data "https://api.congress.gov/v3/congress/$congress_number?format=xml&api_key=${CONGRESS_API}" "$xml_congress_info_output"
 fetch_data "https://api.congress.gov/v3/member/congress/$congress_number?format=xml&currentMember=false&limit=500&api_key=${CONGRESS_API}" "$xml_congress_members_info_output"
 

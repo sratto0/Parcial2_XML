@@ -6,7 +6,6 @@
                 <title>Congress Data</title>
             </head>
             <body>
-                <!-- CONTENIDO DE LA PAGINA (Item A)-->
                 <h1 align="center">
                     <xsl:value-of select="data/congress/name"/>
                 </h1>
@@ -16,16 +15,12 @@
                         to <xsl:value-of select="data/congress/period/@to"/>
                     </xsl:if>
                 </h3>
-                <hr/> <!-- LINEA HORIZONTAL-->
-
-                <!-- CAMARAS (Item B)-->
+                <hr/> 
                 <xsl:for-each select="data/congress/chambers/chamber">
                     <h2 align="center">
                         <xsl:value-of select="name"/>
                     </h2>
                     <h4 align="center">Members</h4>
-
-                    <!-- TABLA DE MIEMBROS-->
                     <table border="1" align="center">
                         <thead bgcolor="yellow">
                             <tr>
@@ -42,8 +37,7 @@
                                     <td><xsl:value-of select="name"/></td>
                                     <td><xsl:value-of select="state"/></td>
                                     <td><xsl:value-of select="party"/></td>
-                                    <td>
-                                      
+                                    <td>         
                                         From <xsl:value-of select="period/@from"/>
                                         <xsl:if test="period/@to">
                                             to <xsl:value-of select="period/@to"/>
@@ -53,8 +47,6 @@
                             </xsl:for-each>
                         </tbody>
                     </table>
-
-                    <!-- Tabla de sesiones -->
                     <h4 align="center">Sessions</h4>
                     <table border="1" align="center">
                         <thead bgcolor="yellow">
@@ -64,7 +56,6 @@
                                 <th>Period</th>
                             </tr>
                         </thead>
-                        <!-- TABLA DE SESIONES-->
                         <tbody>
                             <xsl:for-each select="sessions/session">
                                 <tr>
@@ -80,10 +71,8 @@
                             </xsl:for-each>
                         </tbody>
                     </table>
-
                     <hr/>
                 </xsl:for-each>
-
             </body>
         </html>
     </xsl:template>
